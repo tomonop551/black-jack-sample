@@ -1,43 +1,40 @@
-# TanStack Start - Counter Example
+# Blackjack
 
-This site is built with TanStack Router!
+A single-page Blackjack game built with [TanStack Start](https://tanstack.com/start).
 
-- [TanStack Router Docs](https://tanstack.com/router)
+## Why not a backend?
 
-## Start a new project based on this example
-
-To start a new project based on this example, run:
-
-```sh
-npx gitpick TanStack/router/tree/main/examples/react/start-counter start-counter
-```
-
-## Deployment
-
-It's deployed automagically with Netlify!
-
-- [Netlify](https://netlify.com/)
+The entire game runs in the browser. There is no user authentication, no shared state, and no secrets, so a server would add latency and deployment complexity without adding value.
 
 ## Getting Started
 
-From your terminal:
+This project uses [mise](https://mise.jdx.dev/) to manage tools and [Bun](https://bun.sh/) as the runtime and package manager.
 
 ```sh
-pnpm install
-pnpm dev
+mise install
+mise run dev
 ```
 
-## Build
+Open [http://localhost:3000](http://localhost:3000) to play.
 
-Build for production:
+## Available tasks
 
-```sh
-pnpm build
-```
+| Task | Command | Description |
+| --- | --- | --- |
+| Dev server | `mise run dev` | Start the Vite development server |
+| Build | `mise run build` | Build the app and run type checks |
+| Test | `mise run test` | Run the Blackjack logic test suite |
+| Preview | `mise run preview` | Preview the production build |
 
-## About This Example
+## Project structure
 
-This example demonstrates:
+- `src/lib/blackjack.ts` — Pure game logic (deck, hands, scoring, actions)
+- `src/lib/blackjack.test.ts` — Unit tests for the game rules
+- `src/routes/index.tsx` — Blackjack UI page
 
-- Basic state management
-- Interactive UI components
+## Rules
+
+- Standard 52-card deck
+- Aces count as 11 or 1 to avoid busting
+- Dealer draws until reaching at least 17
+- Blackjack on the initial deal ends the round immediately

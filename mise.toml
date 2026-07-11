@@ -1,0 +1,16 @@
+[tools]
+# Use Bun as the JavaScript runtime and package manager.
+bun = "latest"
+
+[tasks]
+# Start the TanStack Start development server.
+dev = "bun run dev"
+
+# Build the application for production and type-check the source.
+build = "bun run build"
+
+# Run the test suite with Bun's built-in test runner.
+test = "bun test"
+
+# Preview the production build locally.
+preview = "bun run preview"

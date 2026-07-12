@@ -1,8 +1,4 @@
-// Public API for Blackjack game logic.
-//
-// Why not import each module directly? A barrel file keeps callers decoupled
-// from the internal file layout, so the directory structure can evolve without
-// touching every import site.
+// Re-export the public API so callers are insulated from internal file moves.
 export * from './types'
 export * from './deck'
 export * from './scoring'

@@ -1,8 +1,6 @@
 import type { Card } from '../lib/blackjack'
 
-// Why not inline the card rendering inside the page? A dedicated component hides
-// the dealer's hole card during play and formats every card consistently across
-// any screen that needs to show a hand.
+// Encapsulates hole-card hiding and card styling so pages do not repeat it.
 export function Hand({
   cards,
   hideSecondCard,
@@ -45,8 +43,7 @@ export function Hand({
   )
 }
 
-// Why not store the symbol on each card? Mapping the suit name to a Unicode
-// glyph keeps the Card type domain-focused and avoids layout concerns in logic.
+// Keep glyphs out of the Card type so logic files stay presentation-agnostic.
 function suitSymbol(suit: Card['suit']): string {
   switch (suit) {
     case 'hearts':

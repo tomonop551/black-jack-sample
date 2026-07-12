@@ -2,8 +2,7 @@ import { shuffleDeck, createDeck } from './deck'
 import { handValue, isBlackjack, isBust } from './scoring'
 import type { Card, GameState } from './types'
 
-// Why not split dealing into separate functions? A single deal function produces
-// a valid initial state in one call and removes four cards from the deck atomically.
+// Deal player and dealer hands together so the deck is consumed atomically.
 export function dealInitialHands(deck: Card[]): {
   deck: Card[]
   playerHand: Card[]
@@ -13,7 +12,6 @@ export function dealInitialHands(deck: Card[]): {
     throw new Error('Not enough cards to deal')
   }
 
-  // Deal cards in alternating order: player, dealer, player, dealer.
   const playerHand: Card[] = [deck[0], deck[2]]
   const dealerHand: Card[] = [deck[1], deck[3]]
   const remainingDeck = deck.slice(4)
@@ -21,8 +19,7 @@ export function dealInitialHands(deck: Card[]): {
   return { deck: remainingDeck, playerHand, dealerHand }
 }
 
-// Why not mutate the input state? Returning a new state makes every transition
-// predictable and works well with React's immutable update pattern.
+// Return a new state on every transition to keep React updates predictable.
 export function startNewGame(deck?: Card[]): GameState {
   const initialDeck = deck ?? shuffleDeck(createDeck())
   const { deck: remainingDeck, playerHand, dealerHand } = dealInitialHands(initialDeck)
@@ -35,7 +32,6 @@ export function startNewGame(deck?: Card[]): GameState {
     result: null,
   }
 
-  // Check for immediate blackjacks before the player takes any action.
   if (isBlackjack(playerHand) || isBlackjack(dealerHand)) {
     return finishRound(state)
   }
@@ -43,8 +39,7 @@ export function startNewGame(deck?: Card[]): GameState {
   return state
 }
 
-// Why not let the UI handle bust detection? Centralizing the win logic here
-// guarantees that the dealer and player are evaluated by the same rules.
+// Keep win evaluation in one place so both dealer and player use the same rules.
 export function determineResult(
   playerHand: Card[],
   dealerHand: Card[],
@@ -69,8 +64,7 @@ function finishRound(state: GameState): GameState {
   }
 }
 
-// Why not allow hitting after the round is over? A strict phase check prevents
-// accidental state transitions and surfaces misuse in tests immediately.
+// Reject hits outside the player turn to prevent invalid state transitions.
 export function playerHit(state: GameState): GameState {
   if (state.phase !== 'playerTurn') {
     throw new Error('Cannot hit outside of player turn')
@@ -94,8 +88,7 @@ export function playerHit(state: GameState): GameState {
   return nextState
 }
 
-// Why not stop the dealer on a soft 17? Standing on hard 17 or higher is the
-// most common house rule and keeps the implementation simple.
+// Dealer stands on hard 17 or higher; this matches the most common house rule.
 export function playerStand(state: GameState): GameState {
   if (state.phase !== 'playerTurn') {
     throw new Error('Cannot stand outside of player turn')

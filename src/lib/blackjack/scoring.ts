@@ -1,15 +1,13 @@
 import type { Card, Rank } from './types'
 
-// Why not store the numeric value on each card? Computing it from the rank keeps
-// the Card type serializable and avoids duplicating the ace rule in two places.
+// Compute value from rank so Card stays a plain serializable object.
 function rankValue(rank: Rank): number {
   if (rank === 'A') return 11
   if (rank === 'J' || rank === 'Q' || rank === 'K') return 10
   return Number.parseInt(rank, 10)
 }
 
-// Why not store a running hand total? Aces have two legal values, so the total
-// is derived from the cards each time it is needed.
+// Recompute the total each time because aces can count as 1 or 11.
 export function handValue(hand: Card[]): number {
   let total = 0
   let aces = 0
@@ -19,7 +17,6 @@ export function handValue(hand: Card[]): number {
     if (card.rank === 'A') aces += 1
   }
 
-  // Convert aces from 11 to 1 while the hand is busted.
   while (total > 21 && aces > 0) {
     total -= 10
     aces -= 1

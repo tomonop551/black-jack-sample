@@ -1,11 +1,3 @@
-/**
- * Core domain types for Blackjack.
- *
- * Why not inline these types in the logic files? A single source of truth for
- * the domain model makes it easy for UI and game rules to share the same shape
- * without creating circular imports.
- */
-
 export type Suit = 'hearts' | 'diamonds' | 'clubs' | 'spades'
 
 export type Rank =
@@ -28,10 +20,7 @@ export interface Card {
   rank: Rank
 }
 
-export type GamePhase =
-  | 'playerTurn' // Waiting for the player to hit or stand.
-  | 'dealerTurn' // Player stood; dealer is drawing.
-  | 'finished' // The round has a winner or is a push.
+export type GamePhase = 'playerTurn' | 'dealerTurn' | 'finished'
 
 export type GameResult = 'playerWin' | 'dealerWin' | 'push' | null
 

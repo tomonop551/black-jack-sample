@@ -10,19 +10,14 @@ import {
   startNewGame,
 } from '../lib/blackjack'
 
-// Why not use TanStack Start server functions for game state? The entire game
-// fits in the browser and needs no secrets or persistence, so keeping it on the
-// client removes network latency and simplifies deployment.
 export const Route = createFileRoute('/')({
   component: BlackjackPage,
 })
 
 function BlackjackPage() {
-  // Start with a fresh shuffled deck on first render.
   const [game, setGame] = useState<GameState>(() => startNewGame())
 
-  // Why not derive message inside the render directly? A small helper keeps the
-  // JSX focused on structure and makes the wording easy to adjust in one place.
+  // Keep the result text out of JSX so the page layout stays easy to scan.
   const resultText = formatResult(game.result)
 
   return (
@@ -80,8 +75,7 @@ function BlackjackPage() {
   )
 }
 
-// Why not store the message in state? Deriving it from the result keeps the
-// GameState small and guarantees the UI text matches the current outcome.
+// Derive the message from the result so the state shape stays small.
 function formatResult(result: GameResult): string {
   switch (result) {
     case 'playerWin':

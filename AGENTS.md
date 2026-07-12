@@ -36,9 +36,18 @@ Why not run `bun` directly? The `mise.toml` pins the Bun version and keeps the t
 ├── mise.toml              # Tool versions and task definitions
 ├── package.json           # Dependencies and scripts consumed by mise
 ├── src/
+│   ├── components/
+│   │   └── Hand.tsx       # Reusable card-hand display component
 │   ├── lib/
-│   │   ├── blackjack.ts   # Pure game logic (deck, scoring, actions)
-│   │   └── blackjack.test.ts  # Unit tests for game rules
+│   │   └── blackjack/
+│   │       ├── index.ts   # Public API barrel file
+│   │       ├── types.ts   # Domain model types
+│   │       ├── deck.ts    # Deck creation and shuffling
+│   │       ├── scoring.ts # Hand value, bust, and blackjack checks
+│   │       ├── game.ts    # Game state transitions (hit, stand, new game)
+│   │       ├── deck.test.ts
+│   │       ├── scoring.test.ts
+│   │       └── game.test.ts
 │   ├── routes/
 │   │   ├── __root.tsx     # Root layout
 │   │   └── index.tsx      # Blackjack page UI

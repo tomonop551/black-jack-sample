@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
+import { Hand } from '../components/Hand'
 import {
-  type Card,
   type GameResult,
   type GameState,
   handValue,
@@ -78,65 +78,6 @@ function BlackjackPage() {
       </div>
     </main>
   )
-}
-
-// Why not inline the card rendering? A dedicated component hides the dealer's
-// hole card during play and formats every card consistently.
-function Hand({
-  cards,
-  hideSecondCard,
-}: {
-  cards: Card[]
-  hideSecondCard: boolean
-}) {
-  return (
-    <ul
-      style={{
-        display: 'flex',
-        gap: '0.5rem',
-        listStyle: 'none',
-        padding: 0,
-      }}
-    >
-      {cards.map((card, index) => {
-        const hidden = hideSecondCard && index === 1
-        return (
-          <li
-            key={`${card.suit}-${card.rank}-${index}`}
-            style={{
-              width: '4rem',
-              height: '6rem',
-              border: '1px solid #333',
-              borderRadius: '0.5rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: hidden ? '#444' : '#fff',
-              color: hidden ? '#fff' : '#000',
-              fontSize: '1.25rem',
-            }}
-          >
-            {hidden ? '🂠' : `${card.rank}${suitSymbol(card.suit)}`}
-          </li>
-        )
-      })}
-    </ul>
-  )
-}
-
-// Why not store the symbol on each card? Mapping the suit name to a Unicode
-// glyph keeps the Card type domain-focused and avoids layout concerns in logic.
-function suitSymbol(suit: Card['suit']): string {
-  switch (suit) {
-    case 'hearts':
-      return '♥'
-    case 'diamonds':
-      return '♦'
-    case 'clubs':
-      return '♣'
-    case 'spades':
-      return '♠'
-  }
 }
 
 // Why not store the message in state? Deriving it from the result keeps the

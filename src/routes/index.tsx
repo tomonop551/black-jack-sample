@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
+import confetti from 'canvas-confetti'
 import { Hand } from '../components/Hand'
 import {
   type GameResult,
@@ -16,7 +17,20 @@ export const Route = createFileRoute('/')({
 
 function BlackjackPage() {
   const [game, setGame] = useState<GameState>(() => startNewGame())
+  const previousResult = useRef<GameResult>(null)
   const resultText = formatResult(game.result)
+
+  // Fire confetti once when the player wins, but not on every render of a win.
+  useEffect(() => {
+    if (game.result === 'playerWin' && previousResult.current !== 'playerWin') {
+      confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+      })
+    }
+    previousResult.current = game.result
+  }, [game.result])
 
   return (
     <main

@@ -12,9 +12,11 @@ export function Hand({
     <ul
       style={{
         display: 'flex',
-        gap: '0.5rem',
+        justifyContent: 'center',
+        gap: '0.75rem',
         listStyle: 'none',
         padding: 0,
+        margin: 0,
       }}
     >
       {cards.map((card, index) => {
@@ -23,16 +25,20 @@ export function Hand({
           <li
             key={`${card.suit}-${card.rank}-${index}`}
             style={{
-              width: '4rem',
-              height: '6rem',
-              border: '1px solid #333',
-              borderRadius: '0.5rem',
+              width: '4.5rem',
+              height: '6.75rem',
+              borderRadius: '0.625rem',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              backgroundColor: hidden ? '#444' : '#fff',
-              color: hidden ? '#fff' : '#000',
-              fontSize: '1.25rem',
+              background: hidden
+                ? 'repeating-linear-gradient(45deg, #1f2937, #1f2937 0.5rem, #111827 0.5rem, #111827 1rem)'
+                : '#ffffff',
+              color: hidden ? '#ffffff' : suitColor(card.suit),
+              fontSize: '1.5rem',
+              fontWeight: 'bold',
+              boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
+              border: hidden ? '0.125rem solid #374151' : '0.125rem solid #e5e7eb',
             }}
           >
             {hidden ? '🂠' : `${card.rank}${suitSymbol(card.suit)}`}
@@ -55,4 +61,8 @@ function suitSymbol(suit: Card['suit']): string {
     case 'spades':
       return '♠'
   }
+}
+
+function suitColor(suit: Card['suit']): string {
+  return suit === 'hearts' || suit === 'diamonds' ? '#dc2626' : '#111827'
 }

@@ -6,7 +6,12 @@ import {
   createRootRoute,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import '../styles.css'
+
+// Why one module-level client? Every query reads localStorage in the browser,
+// so there is no per-request server data that would require per-request clients.
+const queryClient = new QueryClient()
 
 export const Route = createRootRoute({
   head: () => ({
@@ -29,8 +34,10 @@ export const Route = createRootRoute({
 function RootComponent() {
   return (
     <RootDocument>
-      <Outlet />
-      <TanStackRouterDevtools />
+      <QueryClientProvider client={queryClient}>
+        <Outlet />
+        <TanStackRouterDevtools />
+      </QueryClientProvider>
     </RootDocument>
   )
 }

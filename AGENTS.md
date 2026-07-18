@@ -4,11 +4,12 @@ This file contains context for AI agents working on this project.
 
 ## Project Overview
 
-This is a single-page Blackjack game built with [TanStack Start](https://tanstack.com/start). The entire game state lives in the browser. There is no backend persistence, authentication, or shared state.
+This is a single-page Blackjack game built with [TanStack Start](https://tanstack.com/start). The entire game state lives in the browser. There is no backend persistence, authentication, or shared state. Betting chips and win/loss statistics persist in `localStorage`.
 
 ## Tech Stack
 
 - **Framework**: TanStack Start (React + file-based routing)
+- **Server State**: TanStack Query (queries/mutations over `localStorage`)
 - **Runtime / Package Manager**: [Bun](https://bun.sh/)
 - **Tool Management**: [mise](https://mise.jdx.dev/) via `mise.toml`
 - **Build Tool**: Vite
@@ -37,17 +38,25 @@ Why not run `bun` directly? The `mise.toml` pins the Bun version and keeps the t
 ├── package.json           # Dependencies and scripts consumed by mise
 ├── src/
 │   ├── components/
-│   │   └── Hand.tsx       # Reusable card-hand display component
+│   │   ├── Hand.tsx         # Reusable card-hand display component
+│   │   └── BetControls.tsx  # Bet selection and deal/rebuy buttons
 │   ├── lib/
-│   │   └── blackjack/
+│   │   ├── blackjack/
+│   │   │   ├── index.ts   # Public API barrel file
+│   │   │   ├── types.ts   # Domain model types
+│   │   │   ├── deck.ts    # Deck creation and shuffling
+│   │   │   ├── scoring.ts # Hand value, bust, and blackjack checks
+│   │   │   ├── game.ts    # Game state transitions (hit, stand, new game)
+│   │   │   ├── deck.test.ts
+│   │   │   ├── scoring.test.ts
+│   │   │   └── game.test.ts
+│   │   └── profile/
 │   │       ├── index.ts   # Public API barrel file
-│   │       ├── types.ts   # Domain model types
-│   │       ├── deck.ts    # Deck creation and shuffling
-│   │       ├── scoring.ts # Hand value, bust, and blackjack checks
-│   │       ├── game.ts    # Game state transitions (hit, stand, new game)
-│   │       ├── deck.test.ts
-│   │       ├── scoring.test.ts
-│   │       └── game.test.ts
+│   │       ├── types.ts   # Persistent player profile types
+│   │       ├── profile.ts # Payouts, stats updates, rebuy (pure functions)
+│   │       ├── storage.ts # localStorage load/save wrappers (used by hooks)
+│   │       ├── hooks.ts   # React Query hooks (useProfile, mutations)
+│   │       └── profile.test.ts
 │   ├── routes/
 │   │   ├── __root.tsx     # Root layout
 │   │   └── index.tsx      # Blackjack page UI
@@ -104,7 +113,9 @@ All comments, documentation, and commit messages are written in English.
 
 ## State Management
 
-Game state is local React state in `src/routes/index.tsx`. Why not use server functions or a global store? The game is self-contained, has no secrets, and does not need persistence, so client-only state keeps latency low and deployment simple.
+Round state (cards, phase, result) is local React state in `src/routes/index.tsx`; it is ephemeral and never persisted. The persistent player profile (chips, last bet, stats) is managed by TanStack Query, which treats `localStorage` as its async data source via the wrappers in `src/lib/profile/storage.ts`. Why not useState for the profile too? Query gives a single cache shared by every component and a mutation lifecycle, so persistence stays out of the UI code.
+
+The `QueryClient` lives at module scope in `src/routes/__root.tsx` because all queries run client-side against `localStorage`; there is no per-request server data to isolate.
 
 ## Adding New Routes
 

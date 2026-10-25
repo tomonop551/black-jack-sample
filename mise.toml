@@ -3,6 +3,9 @@
 bun = "latest"
 
 [tasks]
+# Install dependencies from bun.lock without rewriting it.
+install = "bun install --frozen-lockfile"
+
 # Start the TanStack Start development server.
 dev = "bun run dev"
 

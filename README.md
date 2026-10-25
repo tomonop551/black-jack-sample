@@ -38,3 +38,4 @@ Open [http://localhost:3000](http://localhost:3000) to play.
 - Aces count as 11 or 1 to avoid busting
 - Dealer draws until reaching at least 17
 - Blackjack on the initial deal ends the round immediately
+- Double doubles the wager, draws exactly one card, and ends the player's turn

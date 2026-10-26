@@ -1,6 +1,7 @@
 import { shuffleDeck, createDeck } from './deck'
 import { handValue, isBlackjack, isBust } from './scoring'
-import type { Card, GameState } from './types'
+import { MIN_CARDS_TO_DEAL, needsReshuffle, reshuffleShoe, undealtCards } from './shoe'
+import type { Card, GameState, Shoe } from './types'
 
 // Deal player and dealer hands together so the deck is consumed atomically.
 export function dealInitialHands(deck: Card[]): {
@@ -8,7 +9,7 @@ export function dealInitialHands(deck: Card[]): {
   playerHand: Card[]
   dealerHand: Card[]
 } {
-  if (deck.length < 4) {
+  if (deck.length < MIN_CARDS_TO_DEAL) {
     throw new Error('Not enough cards to deal')
   }
 
@@ -22,10 +23,24 @@ export function dealInitialHands(deck: Card[]): {
 // Return a new state on every transition to keep React updates predictable.
 export function startNewGame(deck?: Card[]): GameState {
   const initialDeck = deck ?? shuffleDeck(createDeck())
-  const { deck: remainingDeck, playerHand, dealerHand } = dealInitialHands(initialDeck)
+  return initialRoundState(initialDeck)
+}
+
+// Start a round from the persistent shoe instead of a fresh deck. The
+// reshuffle decision belongs here, at the round boundary: the cut card is
+// allowed to come out mid-round (casinos finish the hand), but the next
+// round starts from a full shoe, so a round can never run the shoe dry.
+export function startRound(shoe: Shoe): GameState {
+  const activeShoe = needsReshuffle(shoe) ? reshuffleShoe(shoe) : shoe
+  return initialRoundState(undealtCards(activeShoe), activeShoe)
+}
+
+function initialRoundState(deck: Card[], shoe?: Shoe): GameState {
+  const { deck: remainingDeck, playerHand, dealerHand } = dealInitialHands(deck)
 
   const state: GameState = {
     deck: remainingDeck,
+    ...(shoe ? { shoe } : {}),
     playerHand,
     dealerHand,
     phase: 'playerTurn',

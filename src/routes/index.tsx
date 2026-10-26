@@ -6,11 +6,15 @@ import { BetControls } from '../components/BetControls'
 import {
   type GameResult,
   type GameState,
+  type Shoe,
+  createShoe,
   handValue,
   isBlackjack,
+  needsReshuffle,
   playerHit,
   playerStand,
-  startNewGame,
+  settleShoe,
+  startRound,
 } from '../lib/blackjack'
 import {
   type PlayerProfile,
@@ -36,8 +40,20 @@ function BlackjackPage() {
   const previousResult = useRef<GameResult>(null)
   const settledGame = useRef<GameState | null>(null)
 
+  // Why a ref and not useState? The shoe is consumed by pure transitions on
+  // `game`, and Next Round settles it back here once per round. A ref keeps
+  // it out of render, so a re-render can never rebuild or reshuffle it;
+  // localStorage persistence would resurrect hands that no longer exist.
+  const shoeRef = useRef<Shoe | null>(null)
+
   const result = game?.result ?? null
   const playerHasBlackjack = game !== null && isBlackjack(game.playerHand)
+
+  // Penetration feedback: cut already passed mid-round, or queued while betting.
+  const shoeAboutToReshuffle =
+    game === null
+      ? shoeRef.current !== null && needsReshuffle(shoeRef.current)
+      : game.shoe !== undefined && game.shoe.cards.length - game.deck.length >= game.shoe.cutIndex
 
   // Why settle in an effect instead of the click handlers? Results can also
   // be decided by the initial deal, and an effect sees every transition.
@@ -81,15 +97,23 @@ function BlackjackPage() {
       <StatsBar profile={profile} />
 
       {game === null ? (
-        <BetControls
-          chips={profile.chips}
-          initialBet={profile.lastBet}
-          onDeal={(amount) => {
-            setBet(amount)
-            setGame(startNewGame())
-          }}
-          onRebuy={() => rebuy()}
-        />
+        <>
+          <BetControls
+            chips={profile.chips}
+            initialBet={profile.lastBet}
+            onDeal={(amount) => {
+              setBet(amount)
+              // startRound reshuffles internally only if the cut was passed;
+              // the surviving shoe (post-deal position) rides inside the game
+              // state so Next Round can settle it back into the ref.
+              const currentShoe = shoeRef.current ?? createShoe()
+              shoeRef.current = currentShoe
+              setGame(startRound(currentShoe))
+            }}
+            onRebuy={() => rebuy()}
+          />
+          <ShoeNotice visible={shoeAboutToReshuffle} />
+        </>
       ) : (
         <>
           <p style={{ marginBottom: '2rem', fontSize: '1.125rem', opacity: 0.9 }}>
@@ -127,12 +151,17 @@ function BlackjackPage() {
             {formatResult(result, bet, playerHasBlackjack)}
           </p>
 
+          <ShoeNotice visible={shoeAboutToReshuffle} />
+
           <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
             {game.phase === 'finished' ? (
               <ActionButton
                 label="Next Round"
                 color="#d97706"
                 onClick={() => {
+                  // The round consumed a contiguous slice of the shoe, so
+                  // settling is just recording how much is left.
+                  if (game.shoe) shoeRef.current = settleShoe(game.shoe, game.deck)
                   setGame(null)
                   setBet(null)
                 }}
@@ -199,6 +228,21 @@ function StatsBar({ profile }: { profile: PlayerProfile }) {
         </div>
       ))}
     </dl>
+  )
+}
+
+// Why not a persistent column? The notice only matters once the cut card is
+// out, so it renders on demand above the action row and never shifts the
+// betting layout when the shoe has plenty left.
+function ShoeNotice({ visible }: { visible: boolean }) {
+  if (!visible) return null
+  return (
+    <p
+      aria-live="polite"
+      style={{ marginBottom: '0.75rem', fontSize: '0.875rem', fontWeight: 'bold', opacity: 0.65 }}
+    >
+      Shuffling soon.
+    </p>
   )
 }
 

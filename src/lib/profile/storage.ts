@@ -18,7 +18,11 @@ export async function loadProfile(): Promise<PlayerProfile> {
   }
 
   try {
-    return { ...initialProfile(), ...(JSON.parse(raw) as PlayerProfile) }
+    const parsed = JSON.parse(raw) as PlayerProfile
+    // Why merge stats as well as the top level? Profiles saved before a stats
+    // field existed (e.g. insurance counters) would otherwise carry undefined
+    // counters into arithmetic and turn them into NaN.
+    return { ...initialProfile(), ...parsed, stats: { ...initialProfile().stats, ...parsed.stats } }
   } catch {
     // A corrupt record must not break the game; fall back to a fresh profile.
     return initialProfile()

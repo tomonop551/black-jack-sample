@@ -19,7 +19,9 @@ export function useRecordResult() {
   return useMutation({
     mutationFn: (input: RecordResultInput) => {
       const current = queryClient.getQueryData<PlayerProfile>(PROFILE_KEY) ?? initialProfile()
-      return saveProfile(applyResult(current, input.result, input.bet, input.playerBlackjack))
+      return saveProfile(
+        applyResult(current, input.result, input.bet, input.playerBlackjack, input.insurance),
+      )
     },
     // Why setQueryData over invalidation? The mutation already returns the
     // fresh profile, so re-reading localStorage would be a wasted round trip.

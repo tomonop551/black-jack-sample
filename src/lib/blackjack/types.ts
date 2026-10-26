@@ -24,8 +24,20 @@ export type GamePhase = 'playerTurn' | 'dealerTurn' | 'finished'
 
 export type GameResult = 'playerWin' | 'dealerWin' | 'push' | null
 
+// Why not a shrinking stack of undealt cards? The reshuffle must recycle
+// every card, so the shoe holds the full shuffled set and a `dealt` pointer;
+// `cutIndex` marks the dealt count at which the cut card has been passed.
+export interface Shoe {
+  cards: Card[]
+  dealt: number
+  cutIndex: number
+}
+
 export interface GameState {
   deck: Card[]
+  // Present when the round deals from the persistent shoe; absent for a
+  // round started from an injected deck.
+  shoe?: Shoe
   playerHand: Card[]
   dealerHand: Card[]
   phase: GamePhase

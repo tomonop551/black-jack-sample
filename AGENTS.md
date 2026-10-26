@@ -45,9 +45,11 @@ Why not run `bun` directly? The `mise.toml` pins the Bun version and keeps the t
 │   │   │   ├── index.ts   # Public API barrel file
 │   │   │   ├── types.ts   # Domain model types
 │   │   │   ├── deck.ts    # Deck creation and shuffling
+│   │   │   ├── shoe.ts    # Multi-deck shoe, cut card, reshuffle rules
 │   │   │   ├── scoring.ts # Hand value, bust, and blackjack checks
-│   │   │   ├── game.ts    # Game state transitions (hit, stand, new game)
+│   │   │   ├── game.ts    # Game state transitions (hit, stand, shoe rounds)
 │   │   │   ├── deck.test.ts
+│   │   │   ├── shoe.test.ts
 │   │   │   ├── scoring.test.ts
 │   │   │   └── game.test.ts
 │   │   └── profile/
@@ -113,7 +115,7 @@ All comments, documentation, and commit messages are written in English.
 
 ## State Management
 
-Round state (cards, phase, result) is local React state in `src/routes/index.tsx`; it is ephemeral and never persisted. The persistent player profile (chips, last bet, stats) is managed by TanStack Query, which treats `localStorage` as its async data source via the wrappers in `src/lib/profile/storage.ts`. Why not useState for the profile too? Query gives a single cache shared by every component and a mutation lifecycle, so persistence stays out of the UI code.
+Round state (cards, phase, result) is local React state in `src/routes/index.tsx`; it is ephemeral and never persisted. The multi-deck shoe survives "Next Round" in a ref in the same component: a re-render must never reshuffle it, and persisting it would resurrect hands that no longer exist. The persistent player profile (chips, last bet, stats) is managed by TanStack Query, which treats `localStorage` as its async data source via the wrappers in `src/lib/profile/storage.ts`. Why not useState for the profile too? Query gives a single cache shared by every component and a mutation lifecycle, so persistence stays out of the UI code.
 
 The `QueryClient` lives at module scope in `src/routes/__root.tsx` because all queries run client-side against `localStorage`; there is no per-request server data to isolate.
 

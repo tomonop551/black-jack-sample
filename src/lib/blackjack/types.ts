@@ -20,9 +20,11 @@ export interface Card {
   rank: Rank
 }
 
-export type GamePhase = 'playerTurn' | 'dealerTurn' | 'finished'
+export type GamePhase = 'insuranceOffer' | 'playerTurn' | 'dealerTurn' | 'finished'
 
 export type GameResult = 'playerWin' | 'dealerWin' | 'push' | null
+
+export type InsuranceResult = 'won' | 'lost' | null
 
 export interface GameState {
   deck: Card[]
@@ -30,4 +32,7 @@ export interface GameState {
   dealerHand: Card[]
   phase: GamePhase
   result: GameResult
+  // Chips staked on insurance this round; null means no stake was placed.
+  insuranceStake: number | null
+  insuranceResult: InsuranceResult
 }

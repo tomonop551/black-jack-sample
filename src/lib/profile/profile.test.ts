@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'bun:test'
-import { INITIAL_CHIPS, applyResult, chipDelta, initialProfile, rebuy, winRate } from './profile'
+import {
+  INITIAL_CHIPS,
+  applyResult,
+  chipDelta,
+  initialProfile,
+  insuranceDelta,
+  rebuy,
+  winRate,
+} from './profile'
 
 // What: chipDelta converts a round outcome into the correct chip change.
 describe('chipDelta', () => {
@@ -31,7 +39,15 @@ describe('applyResult', () => {
 
     expect(next.chips).toBe(INITIAL_CHIPS + 100)
     expect(next.lastBet).toBe(100)
-    expect(next.stats).toEqual({ rounds: 1, wins: 1, losses: 0, pushes: 0, blackjacks: 0 })
+    expect(next.stats).toEqual({
+      rounds: 1,
+      wins: 1,
+      losses: 0,
+      pushes: 0,
+      blackjacks: 0,
+      insuranceWon: 0,
+      insuranceLost: 0,
+    })
   })
 
   it('counts a blackjack win separately', () => {
@@ -60,8 +76,63 @@ describe('applyResult', () => {
     const first = applyResult(initialProfile(), 'playerWin', 10, false)
     const second = applyResult(first, 'dealerWin', 20, false)
 
-    expect(second.stats).toEqual({ rounds: 2, wins: 1, losses: 1, pushes: 0, blackjacks: 0 })
+    expect(second.stats).toEqual({
+      rounds: 2,
+      wins: 1,
+      losses: 1,
+      pushes: 0,
+      blackjacks: 0,
+      insuranceWon: 0,
+      insuranceLost: 0,
+    })
     expect(first.stats.rounds).toBe(1)
+  })
+})
+
+// What: insurance settles as part of the round delta and counts in its own
+// stats columns without touching rounds, wins, losses, or win rate.
+describe('insurance settlement', () => {
+  it('pays 2:1 profit on a won stake', () => {
+    expect(insuranceDelta({ stake: 50, won: true })).toBe(100)
+  })
+
+  it('forfeits the stake when the insurance loses', () => {
+    expect(insuranceDelta({ stake: 50, won: false })).toBe(-50)
+  })
+
+  it('folds a lost stake into a dealer-win round', () => {
+    expect(chipDelta('dealerWin', 100, false, { stake: 50, won: false })).toBe(-150)
+  })
+
+  it('folds a won stake into a push between two naturals', () => {
+    expect(chipDelta('push', 100, true, { stake: 50, won: true })).toBe(100)
+  })
+
+  it('leaves the delta unchanged when no insurance was taken', () => {
+    expect(chipDelta('dealerWin', 100, false, null)).toBe(-100)
+  })
+
+  it('counts an insurance win in its own column', () => {
+    const next = applyResult(initialProfile(), 'dealerWin', 100, false, { stake: 50, won: true })
+
+    expect(next.chips).toBe(INITIAL_CHIPS)
+    expect(next.stats.insuranceWon).toBe(1)
+    expect(next.stats.insuranceLost).toBe(0)
+    expect(next.stats.rounds).toBe(1)
+    expect(next.stats.losses).toBe(1)
+  })
+
+  it('counts an insurance loss in its own column', () => {
+    const next = applyResult(initialProfile(), 'playerWin', 100, false, { stake: 50, won: false })
+
+    expect(next.chips).toBe(INITIAL_CHIPS + 50)
+    expect(next.stats.insuranceLost).toBe(1)
+    expect(next.stats.wins).toBe(1)
+  })
+
+  it('does not move the win rate', () => {
+    const profile = applyResult(initialProfile(), 'dealerWin', 10, false, { stake: 5, won: true })
+    expect(winRate(profile)).toBe(0)
   })
 })
 

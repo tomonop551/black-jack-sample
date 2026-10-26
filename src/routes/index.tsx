@@ -6,6 +6,8 @@ import { BetControls } from '../components/BetControls'
 import {
   type GameResult,
   type GameState,
+  acceptInsurance,
+  declineInsurance,
   handValue,
   isBlackjack,
   playerHit,
@@ -14,6 +16,7 @@ import {
 } from '../lib/blackjack'
 import {
   type PlayerProfile,
+  type InsuranceSettlement,
   chipDelta,
   useProfile,
   useRebuy,
@@ -38,6 +41,7 @@ function BlackjackPage() {
 
   const result = game?.result ?? null
   const playerHasBlackjack = game !== null && isBlackjack(game.playerHand)
+  const insuranceSettlement = insuranceFromGame(game)
 
   // Why settle in an effect instead of the click handlers? Results can also
   // be decided by the initial deal, and an effect sees every transition.
@@ -47,7 +51,12 @@ function BlackjackPage() {
     if (settledGame.current === game) return
     settledGame.current = game
 
-    recordResult({ result: game.result, bet, playerBlackjack: isBlackjack(game.playerHand) })
+    recordResult({
+      result: game.result,
+      bet,
+      playerBlackjack: isBlackjack(game.playerHand),
+      insurance: insuranceFromGame(game),
+    })
   }, [game, bet, recordResult])
 
   // Fire confetti once when the player wins, but not on every render of a win.
@@ -124,7 +133,9 @@ function BlackjackPage() {
               textShadow: '0 2px 4px rgba(0,0,0,0.5)',
             }}
           >
-            {formatResult(result, bet, playerHasBlackjack)}
+            {game.phase === 'insuranceOffer'
+              ? `Dealer shows an Ace — insurance for ${Math.floor((bet ?? 0) / 2)}?`
+              : formatResult(result, bet, playerHasBlackjack, insuranceSettlement)}
           </p>
 
           <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
@@ -138,6 +149,24 @@ function BlackjackPage() {
                 }}
                 disabled={false}
               />
+            ) : game.phase === 'insuranceOffer' ? (
+              <>
+                <ActionButton
+                  label="Insurance"
+                  color="#7c3aed"
+                  onClick={() => {
+                    if (bet === null) return
+                    setGame((current) => (current ? acceptInsurance(current, bet) : current))
+                  }}
+                  disabled={bet === null}
+                />
+                <ActionButton
+                  label="Decline"
+                  color="#4b5563"
+                  onClick={() => setGame((current) => (current ? declineInsurance(current) : current))}
+                  disabled={false}
+                />
+              </>
             ) : (
               <>
                 <ActionButton
@@ -259,17 +288,31 @@ function ActionButton({
   )
 }
 
-function formatResult(result: GameResult, bet: number | null, playerBlackjack: boolean): string {
+// The round tracks the stake, so the settlement is derived rather than stored
+// twice; null means insurance was declined or never offered.
+function insuranceFromGame(game: GameState | null): InsuranceSettlement | null {
+  if (!game || game.insuranceStake === null || game.insuranceResult === null) return null
+  return { stake: game.insuranceStake, won: game.insuranceResult === 'won' }
+}
+
+function formatResult(
+  result: GameResult,
+  bet: number | null,
+  playerBlackjack: boolean,
+  insurance: InsuranceSettlement | null = null,
+): string {
   if (result === null || bet === null) return ''
-  const delta = chipDelta(result, bet, playerBlackjack)
+  const delta = chipDelta(result, bet, playerBlackjack, insurance)
   const suffix = delta > 0 ? ` +${delta}` : delta < 0 ? ` ${delta}` : ''
+  const insuranceNote =
+    insurance === null ? '' : insurance.won ? ' Insurance pays 2:1.' : ' Insurance lost.'
 
   switch (result) {
     case 'playerWin':
       return playerBlackjack ? `Blackjack!${suffix}` : `You win!${suffix}`
     case 'dealerWin':
-      return `Dealer wins.${suffix}`
+      return `Dealer wins.${suffix}${insuranceNote}`
     case 'push':
-      return 'Push.'
+      return `Push.${suffix}${insuranceNote}`
   }
 }

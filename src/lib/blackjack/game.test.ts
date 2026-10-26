@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'bun:test'
 import type { Card } from './types'
-import { dealInitialHands, determineResult, playerHit, playerStand, startNewGame } from './game'
+import {
+  acceptInsurance,
+  dealInitialHands,
+  declineInsurance,
+  determineResult,
+  playerHit,
+  playerStand,
+  startNewGame,
+} from './game'
 
 // What: the initial deal produces two hands and removes four cards from the deck.
 describe('dealInitialHands', () => {
@@ -106,6 +114,156 @@ describe('startNewGame', () => {
 
     expect(game.phase).toBe('finished')
     expect(game.result).toBe('playerWin')
+  })
+})
+
+// What: insurance is offered only while the dealer's up card is an Ace, and
+// both answers settle the side bet against the hole card.
+describe('insurance', () => {
+  it('offers insurance before the player acts when the dealer up card is an Ace', () => {
+    const deck = [
+      { suit: 'hearts', rank: '5' },
+      { suit: 'diamonds', rank: 'A' },
+      { suit: 'clubs', rank: '6' },
+      { suit: 'spades', rank: '7' },
+    ] satisfies Card[]
+    const game = startNewGame(deck)
+
+    expect(game.phase).toBe('insuranceOffer')
+    expect(game.result).toBeNull()
+    expect(game.insuranceStake).toBeNull()
+  })
+
+  it('does not offer insurance when only the hole card is an Ace', () => {
+    const deck = [
+      { suit: 'hearts', rank: '5' },
+      { suit: 'diamonds', rank: 'K' },
+      { suit: 'clubs', rank: '6' },
+      { suit: 'spades', rank: 'A' },
+    ] satisfies Card[]
+    const game = startNewGame(deck)
+
+    // Dealer natural resolves without a side-bet window.
+    expect(game.phase).toBe('finished')
+    expect(game.result).toBe('dealerWin')
+  })
+
+  it('pays 2:1 and finishes the round on a dealer natural', () => {
+    const deck = [
+      { suit: 'hearts', rank: '5' },
+      { suit: 'diamonds', rank: 'A' },
+      { suit: 'clubs', rank: '6' },
+      { suit: 'spades', rank: 'K' },
+    ] satisfies Card[]
+    const next = acceptInsurance(startNewGame(deck), 100)
+
+    expect(next.insuranceStake).toBe(50)
+    expect(next.insuranceResult).toBe('won')
+    expect(next.phase).toBe('finished')
+    expect(next.result).toBe('dealerWin')
+  })
+
+  it('keeps the main wager a push when both sides hold naturals', () => {
+    const deck = [
+      { suit: 'hearts', rank: 'A' },
+      { suit: 'diamonds', rank: 'A' },
+      { suit: 'clubs', rank: 'K' },
+      { suit: 'spades', rank: 'K' },
+    ] satisfies Card[]
+    const next = acceptInsurance(startNewGame(deck), 100)
+
+    expect(next.insuranceResult).toBe('won')
+    expect(next.phase).toBe('finished')
+    expect(next.result).toBe('push')
+  })
+
+  it('forfeits the stake and continues normal play without a dealer natural', () => {
+    const deck = [
+      { suit: 'hearts', rank: '5' },
+      { suit: 'diamonds', rank: 'A' },
+      { suit: 'clubs', rank: '6' },
+      { suit: 'spades', rank: '7' },
+      { suit: 'hearts', rank: '9' },
+    ] satisfies Card[]
+    const accepted = acceptInsurance(startNewGame(deck), 100)
+
+    expect(accepted.insuranceStake).toBe(50)
+    expect(accepted.insuranceResult).toBe('lost')
+    expect(accepted.phase).toBe('playerTurn')
+
+    const finished = playerStand(accepted)
+    expect(finished.insuranceStake).toBe(50)
+    expect(finished.insuranceResult).toBe('lost')
+  })
+
+  it('floors the stake to half of an odd bet to keep chips integral', () => {
+    const deck = [
+      { suit: 'hearts', rank: '5' },
+      { suit: 'diamonds', rank: 'A' },
+      { suit: 'clubs', rank: '6' },
+      { suit: 'spades', rank: '7' },
+    ] satisfies Card[]
+
+    expect(acceptInsurance(startNewGame(deck), 25).insuranceStake).toBe(12)
+  })
+
+  it('declining advances to the player turn without any insurance stake', () => {
+    const deck = [
+      { suit: 'hearts', rank: '5' },
+      { suit: 'diamonds', rank: 'A' },
+      { suit: 'clubs', rank: '6' },
+      { suit: 'spades', rank: '7' },
+    ] satisfies Card[]
+    const next = declineInsurance(startNewGame(deck))
+
+    expect(next.phase).toBe('playerTurn')
+    expect(next.insuranceStake).toBeNull()
+    expect(next.insuranceResult).toBeNull()
+  })
+
+  it('declining still resolves a player blackjack immediately', () => {
+    const deck = [
+      { suit: 'hearts', rank: 'A' },
+      { suit: 'diamonds', rank: 'A' },
+      { suit: 'clubs', rank: 'K' },
+      { suit: 'spades', rank: '7' },
+    ] satisfies Card[]
+    const next = declineInsurance(startNewGame(deck))
+
+    expect(next.phase).toBe('finished')
+    expect(next.result).toBe('playerWin')
+    expect(next.insuranceStake).toBeNull()
+  })
+
+  it('rejects insurance actions outside the insurance window', () => {
+    const deck = [
+      { suit: 'hearts', rank: '5' },
+      { suit: 'diamonds', rank: '6' },
+      { suit: 'clubs', rank: '7' },
+      { suit: 'spades', rank: '8' },
+    ] satisfies Card[]
+    const playerTurn = startNewGame(deck)
+
+    expect(() => acceptInsurance(playerTurn, 100)).toThrow()
+    expect(() => declineInsurance(playerTurn)).toThrow()
+
+    const finished = playerStand(playerTurn)
+    expect(() => acceptInsurance(finished, 100)).toThrow()
+    expect(() => declineInsurance(finished)).toThrow()
+  })
+
+  it('preserves the insurance stake across a hit', () => {
+    const deck = [
+      { suit: 'hearts', rank: '5' },
+      { suit: 'diamonds', rank: 'A' },
+      { suit: 'clubs', rank: '6' },
+      { suit: 'spades', rank: '7' },
+      { suit: 'hearts', rank: '9' },
+    ] satisfies Card[]
+    const next = playerHit(acceptInsurance(startNewGame(deck), 100))
+
+    expect(next.playerHand.length).toBe(3)
+    expect(next.insuranceStake).toBe(50)
   })
 })
 

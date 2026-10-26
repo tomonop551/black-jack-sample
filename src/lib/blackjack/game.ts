@@ -30,6 +30,15 @@ export function startNewGame(deck?: Card[]): GameState {
     dealerHand,
     phase: 'playerTurn',
     result: null,
+    insuranceStake: null,
+    insuranceResult: null,
+  }
+
+  // Why offer insurance before resolving naturals? The window to accept the
+  // side bet closes the moment the round auto-finishes on a blackjack, so the
+  // Ace check must precede the early exit that issue #11 replaces.
+  if (isInsuranceOffer(dealerHand)) {
+    return { ...state, phase: 'insuranceOffer' }
   }
 
   if (isBlackjack(playerHand) || isBlackjack(dealerHand)) {
@@ -37,6 +46,47 @@ export function startNewGame(deck?: Card[]): GameState {
   }
 
   return state
+}
+
+export function isInsuranceOffer(dealerHand: Card[]): boolean {
+  return dealerHand.length >= 1 && dealerHand[0].rank === 'A'
+}
+
+// Both insurance answers resolve the side bet against the hole card and then
+// apply the natural check the deferred early exit would have made.
+export function acceptInsurance(state: GameState, bet: number): GameState {
+  if (state.phase !== 'insuranceOffer') {
+    throw new Error('Cannot take insurance outside of the insurance window')
+  }
+
+  // Why floor a half bet? An all-in odd stake would otherwise create fractional
+  // chips, and every other payout in this game is floored to keep chips integral.
+  const stake = Math.floor(bet / 2)
+  const dealerNatural = isBlackjack(state.dealerHand)
+
+  const settled: GameState = {
+    ...state,
+    insuranceStake: stake,
+    insuranceResult: dealerNatural ? 'won' : 'lost',
+  }
+
+  if (isBlackjack(settled.playerHand) || dealerNatural) {
+    return finishRound(settled)
+  }
+
+  return { ...settled, phase: 'playerTurn' }
+}
+
+export function declineInsurance(state: GameState): GameState {
+  if (state.phase !== 'insuranceOffer') {
+    throw new Error('Cannot decline insurance outside of the insurance window')
+  }
+
+  if (isBlackjack(state.playerHand) || isBlackjack(state.dealerHand)) {
+    return finishRound(state)
+  }
+
+  return { ...state, phase: 'playerTurn' }
 }
 
 // Keep win evaluation in one place so both dealer and player use the same rules.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { INITIAL_CHIPS, applyResult, chipDelta, initialProfile, rebuy, winRate } from './profile'
+import { INITIAL_CHIPS, PROFILE_VERSION, applyResult, chipDelta, initialProfile, rebuy, winRate } from './profile'
 
 // What: chipDelta converts a round outcome into the correct chip change.
 describe('chipDelta', () => {
@@ -62,6 +62,12 @@ describe('applyResult', () => {
 
     expect(second.stats).toEqual({ rounds: 2, wins: 1, losses: 1, pushes: 0, blackjacks: 0 })
     expect(first.stats.rounds).toBe(1)
+  })
+
+  it('carries the storage version through a round', () => {
+    const next = applyResult(initialProfile(), 'push', 10, false)
+
+    expect(next.version).toBe(PROFILE_VERSION)
   })
 })
 

@@ -4,8 +4,13 @@ import type { PlayerProfile } from './types'
 export const INITIAL_CHIPS = 1000
 export const MIN_BET = 10
 
+// Bump when the persisted shape changes and add a migration step for the
+// version being upgraded from in normalizeProfile.
+export const PROFILE_VERSION = 1
+
 export function initialProfile(): PlayerProfile {
   return {
+    version: PROFILE_VERSION,
     chips: INITIAL_CHIPS,
     lastBet: MIN_BET,
     stats: { rounds: 0, wins: 0, losses: 0, pushes: 0, blackjacks: 0 },
@@ -44,6 +49,7 @@ export function applyResult(
   }
 
   return {
+    version: profile.version,
     chips: profile.chips + chipDelta(result, bet, playerBlackjack),
     lastBet: bet,
     stats,

@@ -3,6 +3,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import confetti from 'canvas-confetti'
 import { Hand } from '../components/Hand'
 import { BetControls } from '../components/BetControls'
+import { dealerRevealAnnouncement } from '../components/cardLabels'
 import {
   type GameResult,
   type GameState,
@@ -51,12 +52,15 @@ function BlackjackPage() {
   }, [game, bet, recordResult])
 
   // Fire confetti once when the player wins, but not on every render of a win.
+  // disableForReducedMotion keeps the particle burst from overriding an OS
+  // preference for reduced motion.
   useEffect(() => {
     if (result === 'playerWin' && previousResult.current !== 'playerWin') {
       confetti({
         particleCount: 150,
         spread: 70,
         origin: { y: 0.6 },
+        disableForReducedMotion: true,
       })
     }
     previousResult.current = result
@@ -104,6 +108,13 @@ function BlackjackPage() {
                 Total: {handValue(game.dealerHand)}
               </p>
             )}
+            {/* Why not put aria-live on the visible Total line? That line only
+                mounts when the round ends, and regions added together with
+                their content are announced inconsistently; an always-mounted
+                region whose text changes is reliable. */}
+            <p aria-live="polite" style={visuallyHiddenStyle}>
+              {game.phase === 'finished' ? dealerRevealAnnouncement(game.dealerHand) : ''}
+            </p>
           </section>
 
           <section aria-label="Player hand" style={{ marginBottom: '2rem' }}>
@@ -166,6 +177,21 @@ const pageStyle = {
   margin: '0 auto',
   padding: '2rem',
   textAlign: 'center',
+} as const
+
+// Why not a CSS class? This repo styles everything inline and has no class
+// pipeline outside styles.css; an inline clip keeps the announcer invisible.
+const visuallyHiddenStyle = {
+  position: 'absolute',
+  width: '1px',
+  height: '1px',
+  padding: 0,
+  margin: '-1px',
+  overflow: 'hidden',
+  clip: 'rect(0 0 0 0)',
+  clipPath: 'inset(50%)',
+  whiteSpace: 'nowrap',
+  border: 0,
 } as const
 
 function StatsBar({ profile }: { profile: PlayerProfile }) {

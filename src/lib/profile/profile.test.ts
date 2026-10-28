@@ -1,5 +1,16 @@
 import { describe, expect, it } from 'bun:test'
-import { INITIAL_CHIPS, applyResult, chipDelta, initialProfile, rebuy, winRate } from './profile'
+import { INITIAL_CHIPS, MIN_BET, applyResult, chipDelta, initialProfile, rebuy, winRate } from './profile'
+
+// What: initialProfile is the clean-slate record a reset writes.
+describe('initialProfile', () => {
+  it('starts the player with the initial stake, minimum bet, and zeroed stats', () => {
+    const profile = initialProfile()
+
+    expect(profile.chips).toBe(INITIAL_CHIPS)
+    expect(profile.lastBet).toBe(MIN_BET)
+    expect(profile.stats).toEqual({ rounds: 0, wins: 0, losses: 0, pushes: 0, blackjacks: 0 })
+  })
+})
 
 // What: chipDelta converts a round outcome into the correct chip change.
 describe('chipDelta', () => {

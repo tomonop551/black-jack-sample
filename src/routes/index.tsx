@@ -18,6 +18,7 @@ import {
   useProfile,
   useRebuy,
   useRecordResult,
+  useResetProfile,
   winRate,
 } from '../lib/profile'
 
@@ -29,6 +30,7 @@ function BlackjackPage() {
   const profileQuery = useProfile()
   const { mutate: recordResult } = useRecordResult()
   const { mutate: rebuy } = useRebuy()
+  const { mutate: resetProfile } = useResetProfile()
 
   // game === null means the player is placing a bet, not mid-round.
   const [game, setGame] = useState<GameState | null>(null)
@@ -89,6 +91,7 @@ function BlackjackPage() {
             setGame(startNewGame())
           }}
           onRebuy={() => rebuy()}
+          onReset={() => resetProfile()}
         />
       ) : (
         <>

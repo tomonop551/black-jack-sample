@@ -37,3 +37,14 @@ export function useRebuy() {
     onSuccess: (profile) => queryClient.setQueryData(PROFILE_KEY, profile),
   })
 }
+
+// Why not reuse useRebuy with a flag? Rebuy patches the stored profile and
+// keeps history, while Reset must erase history too — reading the cache at
+// all would risk carrying stale stats through the write.
+export function useResetProfile() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: () => saveProfile(initialProfile()),
+    onSuccess: (profile) => queryClient.setQueryData(PROFILE_KEY, profile),
+  })
+}

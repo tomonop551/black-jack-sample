@@ -9,14 +9,24 @@ export function BetControls({
   initialBet,
   onDeal,
   onRebuy,
+  onReset,
 }: {
   chips: number
   initialBet: number
   onDeal: (bet: number) => void
   onRebuy: () => void
+  onReset: () => void
 }) {
   const [selected, setSelected] = useState(() => Math.min(initialBet, chips))
   const bet = Math.min(selected, chips)
+
+  // Why reset MIN_BET locally as well? The page re-renders with the fresh
+  // profile, but `selected` is local state and would keep showing the old
+  // stake on the chip row after a reset.
+  const handleReset = () => {
+    setSelected(MIN_BET)
+    onReset()
+  }
 
   if (chips < MIN_BET) {
     return (
@@ -27,6 +37,7 @@ export function BetControls({
         <button type="button" onClick={onRebuy} style={dealButtonStyle}>
           Rebuy
         </button>
+        <ResetControl onConfirm={handleReset} />
       </section>
     )
   }
@@ -67,7 +78,52 @@ export function BetControls({
       <button type="button" onClick={() => onDeal(bet)} style={dealButtonStyle}>
         Deal
       </button>
+      <ResetControl onConfirm={handleReset} />
     </section>
+  )
+}
+
+// Two-step inline confirmation: a single stray tap must never erase a
+// session. Why not window.confirm? It is unstyled, blocking, and hostile to
+// mobile browsers, while this matches the table's look.
+function ResetControl({ onConfirm }: { onConfirm: () => void }) {
+  const [confirming, setConfirming] = useState(false)
+
+  if (!confirming) {
+    return (
+      <p style={{ marginTop: '1rem' }}>
+        <button
+          type="button"
+          onClick={() => setConfirming(true)}
+          style={resetLinkStyle}
+        >
+          Reset chips &amp; stats
+        </button>
+      </p>
+    )
+  }
+
+  return (
+    <p style={{ marginTop: '1rem', fontSize: '0.875rem' }}>
+      <span style={{ opacity: 0.85 }}>Erase all chips and stats? This cannot be undone.</span>{' '}
+      <button
+        type="button"
+        onClick={() => {
+          setConfirming(false)
+          onConfirm()
+        }}
+        style={{ ...resetLinkStyle, color: '#f87171', fontWeight: 'bold' }}
+      >
+        Yes, reset
+      </button>{' '}
+      <button
+        type="button"
+        onClick={() => setConfirming(false)}
+        style={resetLinkStyle}
+      >
+        Cancel
+      </button>
+    </p>
   )
 }
 
@@ -120,5 +176,17 @@ const dealButtonStyle = {
   textTransform: 'uppercase',
   letterSpacing: '0.05em',
   boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
+  cursor: 'pointer',
+} as const
+
+// Why not reuse the chip styling? Reset must read as a footnote next to
+// Deal, so it stays a plain underlined text link instead of a button shape.
+const resetLinkStyle = {
+  background: 'none',
+  border: 'none',
+  padding: 0,
+  color: 'rgba(255,255,255,0.6)',
+  fontSize: '0.8rem',
+  textDecoration: 'underline',
   cursor: 'pointer',
 } as const

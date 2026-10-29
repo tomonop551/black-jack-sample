@@ -28,13 +28,18 @@ Open [http://localhost:3000](http://localhost:3000) to play.
 
 ## Project structure
 
-- `src/lib/blackjack.ts` — Pure game logic (deck, hands, scoring, actions)
-- `src/lib/blackjack.test.ts` — Unit tests for the game rules
-- `src/routes/index.tsx` — Blackjack UI page
+Package-level overview; see `AGENTS.md` for the file-by-file map.
+
+- `src/lib/blackjack/` — Game rules as pure functions (deck, scoring, round transitions) with co-located unit tests
+- `src/lib/profile/` — Persistent player profile: payout and rebuy math, `localStorage` storage, and React Query hooks
+- `src/components/` — Shared UI pieces (card hand display, bet controls)
+- `src/routes/` — File-based routes; `src/routes/index.tsx` holds the ephemeral round state and wires the table UI to the libraries above
 
 ## Rules
 
-- Standard 52-card deck
-- Aces count as 11 or 1 to avoid busting
-- Dealer draws until reaching at least 17
-- Blackjack on the initial deal ends the round immediately
+- Cards are dealt from the shoe — currently a single standard 52-card deck, freshly shuffled every round
+- Aces count as 11 or 1, whichever avoids busting
+- The dealer draws until reaching at least 17 and stands on all 17s, soft hands included
+- A natural 21 in the first two cards ends the round immediately, for player or dealer
+- A natural blackjack pays 3:2 with the fraction floored so chips stay whole numbers; any other win pays 1:1; a push returns the bet
+- You start with 1,000 chips and bet from 10 up to your whole stack; once your bankroll drops below the 10-chip minimum you can rebuy for a fresh 1,000 chips and keep your stats

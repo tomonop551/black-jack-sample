@@ -33,9 +33,7 @@ export function BetControls({
 
   return (
     <section aria-label="Place your bet" style={{ marginBottom: '2rem' }}>
-      <h2 style={{ fontSize: '1.25rem', marginBottom: '0.75rem', opacity: 0.9 }}>
-        Place your bet
-      </h2>
+      <h2 style={{ fontSize: '1.25rem', marginBottom: '0.75rem', opacity: 0.9 }}>Place your bet</h2>
       <div
         style={{
           display: 'flex',
@@ -61,9 +59,7 @@ export function BetControls({
           onClick={() => setSelected(chips)}
         />
       </div>
-      <p style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>
-        Bet: {bet}
-      </p>
+      <p style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>Bet: {bet}</p>
       <button type="button" onClick={() => onDeal(bet)} style={dealButtonStyle}>
         Deal
       </button>

@@ -72,7 +72,12 @@ describe('winRate', () => {
   })
 
   it('computes wins over total rounds', () => {
-    const profile = applyResult(applyResult(initialProfile(), 'playerWin', 10, false), 'push', 10, false)
+    const profile = applyResult(
+      applyResult(initialProfile(), 'playerWin', 10, false),
+      'push',
+      10,
+      false,
+    )
     expect(winRate(profile)).toBe(0.5)
   })
 })

@@ -20,13 +20,13 @@ This is a single-page Blackjack game built with [TanStack Start](https://tanstac
 
 Always use mise tasks instead of calling package managers directly:
 
-| Task | Command |
-| --- | --- |
-| Install tools | `mise install` |
-| Dev server | `mise run dev` |
-| Production build + type check | `mise run build` |
-| Run tests | `mise run test` |
-| Preview production build | `mise run preview` |
+| Task                          | Command            |
+| ----------------------------- | ------------------ |
+| Install tools                 | `mise install`     |
+| Dev server                    | `mise run dev`     |
+| Production build + type check | `mise run build`   |
+| Run tests                     | `mise run test`    |
+| Preview production build      | `mise run preview` |
 
 Why not run `bun` directly? The `mise.toml` pins the Bun version and keeps the task definitions version-controlled, so every environment behaves the same.
 
@@ -71,7 +71,7 @@ Why not run `bun` directly? The `mise.toml` pins the Bun version and keeps the t
 
 ### Comments: explain "Why not"
 
-Code comments should explain why an alternative approach was rejected, not merely restate what the code does. The code itself expresses *how*.
+Code comments should explain why an alternative approach was rejected, not merely restate what the code does. The code itself expresses _how_.
 
 ```ts
 // Why not mutate the deck in place? Returning a new deck makes the game

@@ -17,3 +17,9 @@ test = "bun test"
 
 # Preview the production build locally.
 preview = "bun run preview"
+
+# Report lint and type-rule violations without writing files.
+lint = "bun run lint"
+
+# Rewrite files in place to the shared Prettier style.
+format = "bun run format"

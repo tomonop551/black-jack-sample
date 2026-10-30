@@ -74,7 +74,13 @@ function BlackjackPage() {
 
   return (
     <main style={pageStyle}>
-      <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+      <h1
+        style={{
+          fontSize: '2.5rem',
+          marginBottom: '1rem',
+          textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+        }}
+      >
         Blackjack
       </h1>
 
@@ -92,9 +98,7 @@ function BlackjackPage() {
         />
       ) : (
         <>
-          <p style={{ marginBottom: '2rem', fontSize: '1.125rem', opacity: 0.9 }}>
-            Bet: {bet}
-          </p>
+          <p style={{ marginBottom: '2rem', fontSize: '1.125rem', opacity: 0.9 }}>Bet: {bet}</p>
 
           <section aria-label="Dealer hand" style={{ marginBottom: '2rem' }}>
             <h2 style={{ fontSize: '1.25rem', marginBottom: '0.75rem', opacity: 0.9 }}>Dealer</h2>
@@ -192,7 +196,14 @@ function StatsBar({ profile }: { profile: PlayerProfile }) {
     >
       {items.map(([label, value]) => (
         <div key={label} style={{ textAlign: 'center' }}>
-          <dt style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', opacity: 0.7 }}>
+          <dt
+            style={{
+              fontSize: '0.75rem',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              opacity: 0.7,
+            }}
+          >
             {label}
           </dt>
           <dd style={{ margin: 0, fontSize: '1.125rem', fontWeight: 'bold' }}>{value}</dd>
@@ -238,12 +249,14 @@ function ActionButton({
       onMouseEnter={(e) => {
         if (!disabled) {
           e.currentTarget.style.transform = 'scale(1.05)'
-          e.currentTarget.style.boxShadow = '0 6px 8px rgba(0,0,0,0.4), inset 0 2px 4px rgba(255,255,255,0.2)'
+          e.currentTarget.style.boxShadow =
+            '0 6px 8px rgba(0,0,0,0.4), inset 0 2px 4px rgba(255,255,255,0.2)'
         }
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.transform = 'scale(1)'
-        e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.2)'
+        e.currentTarget.style.boxShadow =
+          '0 4px 6px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.2)'
       }}
       onMouseDown={(e) => {
         if (!disabled) {

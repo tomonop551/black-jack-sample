@@ -19,12 +19,12 @@ Open [http://localhost:3000](http://localhost:3000) to play.
 
 ## Available tasks
 
-| Task | Command | Description |
-| --- | --- | --- |
-| Dev server | `mise run dev` | Start the Vite development server |
-| Build | `mise run build` | Build the app and run type checks |
-| Test | `mise run test` | Run the Blackjack logic test suite |
-| Preview | `mise run preview` | Preview the production build |
+| Task       | Command            | Description                        |
+| ---------- | ------------------ | ---------------------------------- |
+| Dev server | `mise run dev`     | Start the Vite development server  |
+| Build      | `mise run build`   | Build the app and run type checks  |
+| Test       | `mise run test`    | Run the Blackjack logic test suite |
+| Preview    | `mise run preview` | Preview the production build       |
 
 ## Project structure
 

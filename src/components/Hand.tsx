@@ -1,13 +1,7 @@
 import type { Card } from '../lib/blackjack'
 
 // Encapsulates hole-card hiding and card styling so pages do not repeat it.
-export function Hand({
-  cards,
-  hideSecondCard,
-}: {
-  cards: Card[]
-  hideSecondCard: boolean
-}) {
+export function Hand({ cards, hideSecondCard }: { cards: Card[]; hideSecondCard: boolean }) {
   return (
     <ul
       style={{

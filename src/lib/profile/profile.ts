@@ -15,7 +15,11 @@ export function initialProfile(): PlayerProfile {
 // Why not pay blackjack at even money? The traditional 3:2 payout is the
 // main reason blackjack is beatable, so we keep it and floor odd fractions
 // to keep chip counts integers.
-export function chipDelta(result: Exclude<GameResult, null>, bet: number, playerBlackjack: boolean): number {
+export function chipDelta(
+  result: Exclude<GameResult, null>,
+  bet: number,
+  playerBlackjack: boolean,
+): number {
   switch (result) {
     case 'playerWin':
       return playerBlackjack ? Math.floor(bet * 1.5) : bet

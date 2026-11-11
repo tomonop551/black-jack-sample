@@ -3,30 +3,43 @@
   "extends": [
     "config:recommended",
     ":timezone(Asia/Tokyo)",
-    "schedule:weekly",
     "helpers:pinGitHubActionDigests"
   ],
   "dependencyDashboard": true,
   "lockFileMaintenance": {
     "enabled": true,
-    "schedule": ["before 6am on monday"]
+    "schedule": [
+      "* * * * 4,5,6"
+    ]
   },
   "osvVulnerabilityAlerts": true,
   "packageRules": [
     {
       "description": "型定義はまとめて1本のPRにする",
       "groupName": "types",
-      "matchPackageNames": ["@types/{/,}**"]
+      "matchPackageNames": [
+        "@types/{/,}**"
+      ]
     },
     {
       "description": "TanStack 系は内部でバージョンが揃っている必要があるため同時に上げる",
       "groupName": "tanstack",
-      "matchPackageNames": ["@tanstack/{/,}**"]
+      "matchPackageNames": [
+        "@tanstack/{/,}**"
+      ]
     },
     {
       "description": "React 本体と型定義のメジャーを揃える（上の types ルールより後で上書きする）",
       "groupName": "react",
-      "matchPackageNames": ["react", "react-dom", "@types/react", "@types/react-dom"]
+      "matchPackageNames": [
+        "react",
+        "react-dom",
+        "@types/react",
+        "@types/react-dom"
+      ]
     }
+  ],
+  "schedule": [
+    "* * * * 4,5,6"
   ]
 }

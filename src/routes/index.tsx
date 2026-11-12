@@ -8,6 +8,7 @@ import {
   type GameState,
   handValue,
   isBlackjack,
+  playerDouble,
   playerHit,
   playerStand,
   startNewGame,
@@ -15,6 +16,7 @@ import {
 import {
   type PlayerProfile,
   chipDelta,
+  resolvedStake,
   useProfile,
   useRebuy,
   useRecordResult,
@@ -33,11 +35,14 @@ function BlackjackPage() {
   // game === null means the player is placing a bet, not mid-round.
   const [game, setGame] = useState<GameState | null>(null)
   const [bet, setBet] = useState<number | null>(null)
+  const [doubled, setDoubled] = useState(false)
   const previousResult = useRef<GameResult>(null)
   const settledGame = useRef<GameState | null>(null)
 
   const result = game?.result ?? null
   const playerHasBlackjack = game !== null && isBlackjack(game.playerHand)
+  // What the player has at risk this round; a doubled round raises the stake.
+  const stake = bet === null ? null : resolvedStake(bet, doubled)
 
   // Why settle in an effect instead of the click handlers? Results can also
   // be decided by the initial deal, and an effect sees every transition.
@@ -47,8 +52,13 @@ function BlackjackPage() {
     if (settledGame.current === game) return
     settledGame.current = game
 
-    recordResult({ result: game.result, bet, playerBlackjack: isBlackjack(game.playerHand) })
-  }, [game, bet, recordResult])
+    recordResult({
+      result: game.result,
+      bet,
+      playerBlackjack: isBlackjack(game.playerHand),
+      doubled,
+    })
+  }, [game, bet, doubled, recordResult])
 
   // Fire confetti once when the player wins, but not on every render of a win.
   useEffect(() => {
@@ -71,6 +81,15 @@ function BlackjackPage() {
   }
 
   const profile = profileQuery.data
+  // Why require twice the bet? Doubling risks the doubled stake in a single
+  // round, so offering it to a bankroll that only covers the original bet would
+  // let the chips settle below zero.
+  const canDouble =
+    game !== null &&
+    game.phase === 'playerTurn' &&
+    game.playerHand.length === 2 &&
+    bet !== null &&
+    profile.chips >= bet * 2
 
   return (
     <main style={pageStyle}>
@@ -85,6 +104,7 @@ function BlackjackPage() {
           chips={profile.chips}
           initialBet={profile.lastBet}
           onDeal={(amount) => {
+            setDoubled(false)
             setBet(amount)
             setGame(startNewGame())
           }}
@@ -93,7 +113,8 @@ function BlackjackPage() {
       ) : (
         <>
           <p style={{ marginBottom: '2rem', fontSize: '1.125rem', opacity: 0.9 }}>
-            Bet: {bet}
+            Bet: {stake}
+            {doubled ? ' (doubled)' : ''}
           </p>
 
           <section aria-label="Dealer hand" style={{ marginBottom: '2rem' }}>
@@ -124,7 +145,7 @@ function BlackjackPage() {
               textShadow: '0 2px 4px rgba(0,0,0,0.5)',
             }}
           >
-            {formatResult(result, bet, playerHasBlackjack)}
+            {formatResult(result, stake, playerHasBlackjack)}
           </p>
 
           <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
@@ -133,6 +154,7 @@ function BlackjackPage() {
                 label="Next Round"
                 color="#d97706"
                 onClick={() => {
+                  setDoubled(false)
                   setGame(null)
                   setBet(null)
                 }}
@@ -151,6 +173,15 @@ function BlackjackPage() {
                   color="#dc2626"
                   onClick={() => setGame((current) => (current ? playerStand(current) : current))}
                   disabled={game.phase !== 'playerTurn'}
+                />
+                <ActionButton
+                  label="Double"
+                  color="#7c3aed"
+                  onClick={() => {
+                    setDoubled(true)
+                    setGame((current) => (current ? playerDouble(current) : current))
+                  }}
+                  disabled={!canDouble}
                 />
               </>
             )}

@@ -1,5 +1,5 @@
 import type { GameResult } from '../blackjack'
-import type { PlayerProfile } from './types'
+import type { PlayerProfile, RecordResultInput } from './types'
 
 export const INITIAL_CHIPS = 1000
 export const MIN_BET = 10
@@ -26,13 +26,14 @@ export function chipDelta(result: Exclude<GameResult, null>, bet: number, player
   }
 }
 
+// The wager a round actually settles at, which doubling raises to twice the bet.
+export function resolvedStake(bet: number, doubled: boolean): number {
+  return doubled ? bet * 2 : bet
+}
+
 // Return a new profile on every update so React Query cache writes stay immutable.
-export function applyResult(
-  profile: PlayerProfile,
-  result: Exclude<GameResult, null>,
-  bet: number,
-  playerBlackjack: boolean,
-): PlayerProfile {
+export function applyResult(profile: PlayerProfile, round: RecordResultInput): PlayerProfile {
+  const { result, bet, playerBlackjack, doubled } = round
   const stats = { ...profile.stats, rounds: profile.stats.rounds + 1 }
   if (result === 'playerWin') {
     stats.wins += 1
@@ -44,7 +45,10 @@ export function applyResult(
   }
 
   return {
-    chips: profile.chips + chipDelta(result, bet, playerBlackjack),
+    chips: profile.chips + chipDelta(result, resolvedStake(bet, doubled), playerBlackjack),
+    // Why not save the doubled stake as lastBet? lastBet pre-fills the next
+    // round's bet control, and doubling is a decision about one round rather
+    // than a new default stake.
     lastBet: bet,
     stats,
   }

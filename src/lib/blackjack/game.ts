@@ -89,11 +89,8 @@ export function playerHit(state: GameState): GameState {
 }
 
 // Dealer stands on hard 17 or higher; this matches the most common house rule.
-export function playerStand(state: GameState): GameState {
-  if (state.phase !== 'playerTurn') {
-    throw new Error('Cannot stand outside of player turn')
-  }
-
+// Every action that hands the round over (stand, double) shares this loop.
+function playDealerHand(state: GameState): GameState {
   let nextState: GameState = { ...state, phase: 'dealerTurn' }
 
   while (handValue(nextState.dealerHand) < 17 && nextState.deck.length > 0) {
@@ -105,5 +102,44 @@ export function playerStand(state: GameState): GameState {
     }
   }
 
-  return finishRound(nextState)
+  return nextState
+}
+
+export function playerStand(state: GameState): GameState {
+  if (state.phase !== 'playerTurn') {
+    throw new Error('Cannot stand outside of player turn')
+  }
+
+  return finishRound(playDealerHand(state))
+}
+
+// Doubling commits the player to exactly one card, so the dealer takes over as
+// soon as that card is dealt.
+export function playerDouble(state: GameState): GameState {
+  if (state.phase !== 'playerTurn') {
+    throw new Error('Cannot double outside of player turn')
+  }
+
+  if (state.playerHand.length !== 2) {
+    throw new Error('Cannot double after hitting')
+  }
+
+  if (state.deck.length === 0) {
+    throw new Error('The deck is empty')
+  }
+
+  const [drawnCard, ...remainingDeck] = state.deck
+  const nextState: GameState = {
+    ...state,
+    deck: remainingDeck,
+    playerHand: [...state.playerHand, drawnCard],
+  }
+
+  if (isBust(nextState.playerHand)) {
+    // Why not let the dealer draw anyway? The doubled card already lost the
+    // round, so extra dealer cards would only rewrite the board after the fact.
+    return finishRound(nextState)
+  }
+
+  return finishRound(playDealerHand(nextState))
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import type { Card } from './types'
-import { dealInitialHands, determineResult, playerHit, playerStand, startNewGame } from './game'
+import { dealInitialHands, determineResult, playerDouble, playerHit, playerStand, startNewGame } from './game'
 
 // What: the initial deal produces two hands and removes four cards from the deck.
 describe('dealInitialHands', () => {
@@ -197,5 +197,101 @@ describe('playerStand', () => {
     const finished = playerStand(game)
 
     expect(() => playerStand(finished)).toThrow()
+  })
+})
+
+// What: doubling draws exactly one card and then hands the round to the dealer.
+describe('playerDouble', () => {
+  it('draws one card for the player, plays the dealer out, and finishes the round', () => {
+    const deck = [
+      { suit: 'hearts', rank: '5' },
+      { suit: 'diamonds', rank: '6' },
+      { suit: 'clubs', rank: '7' },
+      { suit: 'spades', rank: '8' },
+      { suit: 'hearts', rank: '9' },
+      { suit: 'diamonds', rank: '2' },
+      { suit: 'clubs', rank: '3' },
+    ] satisfies Card[]
+    const game = startNewGame(deck)
+    const next = playerDouble(game)
+
+    expect(next.playerHand.length).toBe(3)
+    expect(next.dealerHand.length).toBe(4)
+    expect(next.phase).toBe('finished')
+    expect(next.result).toBe('playerWin')
+  })
+
+  it('ends the round on a busting doubled card without dealing to the dealer', () => {
+    const deck = [
+      { suit: 'hearts', rank: '10' },
+      { suit: 'diamonds', rank: '10' },
+      { suit: 'clubs', rank: '5' },
+      { suit: 'spades', rank: '7' },
+      { suit: 'hearts', rank: 'K' },
+      { suit: 'diamonds', rank: '2' },
+    ] satisfies Card[]
+    const game = startNewGame(deck)
+    const next = playerDouble(game)
+
+    expect(next.playerHand.length).toBe(3)
+    expect(next.dealerHand.length).toBe(2)
+    expect(next.deck.length).toBe(game.deck.length - 1)
+    expect(next.phase).toBe('finished')
+    expect(next.result).toBe('dealerWin')
+  })
+
+  it('throws when the dealer has blackjack and the round is already settled', () => {
+    const deck = [
+      { suit: 'hearts', rank: '5' },
+      { suit: 'spades', rank: 'A' },
+      { suit: 'clubs', rank: '7' },
+      { suit: 'diamonds', rank: 'K' },
+    ] satisfies Card[]
+    const game = startNewGame(deck)
+
+    expect(game.phase).toBe('finished')
+    expect(game.result).toBe('dealerWin')
+    expect(() => playerDouble(game)).toThrow()
+  })
+
+  it('throws when the player has already hit', () => {
+    const deck = [
+      { suit: 'hearts', rank: '5' },
+      { suit: 'diamonds', rank: '6' },
+      { suit: 'clubs', rank: '7' },
+      { suit: 'spades', rank: '8' },
+      { suit: 'hearts', rank: '9' },
+    ] satisfies Card[]
+    const game = playerHit(startNewGame(deck))
+
+    expect(game.playerHand.length).toBe(3)
+    expect(() => playerDouble(game)).toThrow()
+  })
+
+  it('throws when the round is already finished', () => {
+    const deck = [
+      { suit: 'hearts', rank: '5' },
+      { suit: 'diamonds', rank: '6' },
+      { suit: 'clubs', rank: '7' },
+      { suit: 'spades', rank: '8' },
+      { suit: 'hearts', rank: '9' },
+    ] satisfies Card[]
+    const finished = playerStand(startNewGame(deck))
+
+    expect(finished.phase).toBe('finished')
+    expect(() => playerDouble(finished)).toThrow()
+  })
+
+  it('throws when the deck is empty', () => {
+    const deck = [
+      { suit: 'hearts', rank: '5' },
+      { suit: 'diamonds', rank: '6' },
+      { suit: 'clubs', rank: '7' },
+      { suit: 'spades', rank: '8' },
+    ] satisfies Card[]
+    const game = startNewGame(deck)
+
+    expect(game.deck.length).toBe(0)
+    expect(() => playerDouble(game)).toThrow()
   })
 })

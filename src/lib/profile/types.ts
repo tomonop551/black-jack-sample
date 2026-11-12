@@ -18,4 +18,5 @@ export interface RecordResultInput {
   result: Exclude<import('../blackjack').GameResult, null>
   bet: number
   playerBlackjack: boolean
+  doubled: boolean
 }

@@ -1,4 +1,5 @@
 import type { Card } from '../lib/blackjack'
+import { FACE_DOWN_LABEL, cardName } from './cardLabels'
 
 // Encapsulates hole-card hiding and card styling so pages do not repeat it.
 export function Hand({
@@ -24,6 +25,9 @@ export function Hand({
         return (
           <li
             key={`${card.suit}-${card.rank}-${index}`}
+            // Why not let the glyph provide the accessible name? AT voices
+            // "A♥" and "🂠" inconsistently, so the label carries the words.
+            aria-label={hidden ? FACE_DOWN_LABEL : cardName(card)}
             style={{
               width: '4.5rem',
               height: '6.75rem',
@@ -41,7 +45,7 @@ export function Hand({
               border: hidden ? '0.125rem solid #374151' : '0.125rem solid #e5e7eb',
             }}
           >
-            {hidden ? '🂠' : `${card.rank}${suitSymbol(card.suit)}`}
+            <span aria-hidden="true">{hidden ? '🂠' : `${card.rank}${suitSymbol(card.suit)}`}</span>
           </li>
         )
       })}

@@ -39,7 +39,9 @@ Why not run `bun` directly? The `mise.toml` pins the Bun version and keeps the t
 ├── src/
 │   ├── components/
 │   │   ├── Hand.tsx         # Reusable card-hand display component
-│   │   └── BetControls.tsx  # Bet selection and deal/rebuy buttons
+│   │   ├── BetControls.tsx  # Bet selection and deal/rebuy buttons
+│   │   ├── cardLabels.ts    # Screen-reader-friendly card names (pure)
+│   │   └── cardLabels.test.ts # Tests for the above
 │   ├── lib/
 │   │   ├── blackjack/
 │   │   │   ├── index.ts   # Public API barrel file
